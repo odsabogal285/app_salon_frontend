@@ -1,9 +1,11 @@
 <script setup>
   import {inject} from 'vue'
+  import { useRouter } from "vue-router";
   import AuthAPI from "@/api/AuthAPI.js";
   import {reset} from "@formkit/vue";
 
   const toast = inject('toast');
+  const router = useRouter();
   const handleSubmit = async (formData) => {
     try {
 
@@ -16,6 +18,7 @@
           type: 'success'
         });
         reset('loginForm');
+        router.push({name: 'my-appointments'});
       }
 
     } catch (error) {
