@@ -8,7 +8,6 @@ export const useServicesStore = defineStore('services', () => {
 
    onMounted(async () => {
       try {
-
          const { data } = await ServicesAPI.all();
          services.value = data.data;
       } catch (error) {
