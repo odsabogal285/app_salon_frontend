@@ -9,5 +9,11 @@ export default  {
     },
     getUserAppointments () {
         return api.get('/appointments-user');
+    },
+    getById (id) {
+        return api.get(`/appointments/${id}/edit`)
+    },
+    update(id, data) {
+        return api.put(`/appointments/${id}`, data)
     }
 }

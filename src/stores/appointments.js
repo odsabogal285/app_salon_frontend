@@ -3,17 +3,20 @@ import {ref, computed, onMounted, inject, watch} from "vue";
 import AppointmentAPI from "@/api/AppointmentAPI.js";
 import {convertDate} from "@/helpers/dates.js";
 import {useRouter} from "vue-router";
+import {useUserStore} from "@/stores/user.js";
 
 export const useAppointmentsStore = defineStore('appointmenst', () => {
 
+    const appointmentId = ref('');
     const services = ref([]);
     const date = ref('');
-    const hours = ref([]);
     const time = ref('');
+    const hours = ref([]);
     const appointmentsByDate = ref([]);
 
     const toast = inject('toast');
     const router = useRouter();
+    const user = useUserStore();
 
     onMounted(() => {
         const startHour = 10;
@@ -27,10 +30,22 @@ export const useAppointmentsStore = defineStore('appointmenst', () => {
         time.value = '';
         if (date.value === '') return
         const {data} = await AppointmentAPI.getByDate(convertDate(date.value));
-        appointmentsByDate.value = data.data.appointments;
-        console.log(data, convertDate(date.value));
+        console.log('entra aqui');
+        if (appointmentId.value) {
+            appointmentsByDate.value = data.data.appointments.filter(appointment => appointment.id !== appointmentId.value);
+            time.value = data.data.appointments.filter(appointment => appointment.id === appointmentId.value)[0]?.time;
+        }else {
+            appointmentsByDate.value = data.data.appointments;
+        }
     })
 
+    function setSelectedAppointment (appointment) {
+        //console.log(appointment);
+        services.value = appointment.services;
+        date.value = appointment.date_formatted;
+        time.value = appointment.time;
+        appointmentId.value = appointment.id;
+    }
     function onServiceSelected(service) {
         if(services.value.some(selectedService => selectedService.id === service.id)) {
             services.value = services.value.filter(selectedService => selectedService.id !== service.id);
@@ -44,7 +59,7 @@ export const useAppointmentsStore = defineStore('appointmenst', () => {
 
     }
 
-    async function createAppointment () {
+    async function saveAppointment () {
         const appointment = {
             services: services.value.map(service => service.id),
             date: convertDate(date.value),
@@ -53,16 +68,24 @@ export const useAppointmentsStore = defineStore('appointmenst', () => {
         }
 
         try {
-            const { data } = await AppointmentAPI.create(appointment);
+            if (appointmentId.value) {
+                const { data } = await AppointmentAPI.update(appointmentId.value, appointment);
+                toast.open({
+                    message: data.data.message,
+                    type: 'success'
+                });
 
-            console.log(data);
+            } else{
+                const { data } = await AppointmentAPI.create(appointment);
+                toast.open({
+                    message: data.data.message,
+                    type: 'success'
+                });
 
-            toast.open({
-                message: data.data.message,
-                type: 'success'
-            });
+            }
 
             clearAppointmentData();
+            user.getUserAppointments();
             router.push({name: 'my-appointments'});
 
         } catch (error) {
@@ -75,6 +98,7 @@ export const useAppointmentsStore = defineStore('appointmenst', () => {
         services.value = []
         date.value = '';
         time.value = '';
+        appointmentId.value = '';
     }
 
     const isServiceSelected = computed(() => {
@@ -88,7 +112,7 @@ export const useAppointmentsStore = defineStore('appointmenst', () => {
     })
 
     const isValidReservation = computed(() => {
-        return services.value.length && date.value.length && time.value.length
+        return services.value.length && date.value.length && time.value?.length
     });
 
     const isDateSelected = computed(() => {
@@ -106,8 +130,10 @@ export const useAppointmentsStore = defineStore('appointmenst', () => {
         date,
         hours,
         time,
+        setSelectedAppointment,
         onServiceSelected,
-        createAppointment,
+        saveAppointment,
+        clearAppointmentData,
         isServiceSelected,
         isValidReservation,
         isDateSelected,
