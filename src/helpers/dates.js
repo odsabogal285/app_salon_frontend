@@ -7,6 +7,6 @@ export function convertDate (strDate) {
 }
 
 export function displayDate (date) {
-    const formattedDate = format(date, 'PPPP', {locale: es});
-    return formattedDate;
+    const date2 = parse(date, 'yyyy-MM-dd', new Date(), { timeZone: 'UTC' });
+    return format(date2, 'PPPP', {locale: es});
 }

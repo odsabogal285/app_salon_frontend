@@ -7,8 +7,11 @@ export default {
     login (data) {
         return api.post('/login', data);
     },
-    auth (data) {
+    auth () {
         return api.get('/me')
+    },
+    admin () {
+        return api.get('/admin')
     },
     forgotPassword (data) {
         return api.post('/forgot-password', data)
