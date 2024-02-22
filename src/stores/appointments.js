@@ -4,6 +4,7 @@ import AppointmentAPI from "@/api/AppointmentAPI.js";
 import {convertDate} from "@/helpers/dates.js";
 import {useRouter} from "vue-router";
 import {useUserStore} from "@/stores/user.js";
+import appointmentAPI from "@/api/AppointmentAPI.js";
 
 export const useAppointmentsStore = defineStore('appointmenst', () => {
 
@@ -101,6 +102,22 @@ export const useAppointmentsStore = defineStore('appointmenst', () => {
         appointmentId.value = '';
     }
 
+    async function cancelAppointment (id) {
+        try {
+            if(confirm('¿Desea cancelar?')) {
+                const { data } = await appointmentAPI.destroy(id);
+
+                toast.open({
+                    message: data.data.message,
+                    type: 'success'
+                });
+                user.userAppointments = user.userAppointments.filter(appointment => appointment.id !== id);
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
     const isServiceSelected = computed(() => {
         return (id) => services.value.some(service => service.id === id);
     });
@@ -134,6 +151,7 @@ export const useAppointmentsStore = defineStore('appointmenst', () => {
         onServiceSelected,
         saveAppointment,
         clearAppointmentData,
+        cancelAppointment,
         isServiceSelected,
         isValidReservation,
         isDateSelected,

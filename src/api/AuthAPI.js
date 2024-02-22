@@ -9,5 +9,14 @@ export default {
     },
     auth (data) {
         return api.get('/me')
+    },
+    forgotPassword (data) {
+        return api.post('/forgot-password', data)
+    },
+    verifyPasswordResetToken (token) {
+        return api.get(`/forgot-password/${token}`)
+    },
+    updatePassword (token, data) {
+        return api.post(`/forgot-password/${token}`, data)
     }
 }
